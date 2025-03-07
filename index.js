@@ -1,15 +1,31 @@
 // Backend 
 const express = require("express");
-const { default: mongoose } = require("mongoose");
+const mongoose = require("mongoose");
 const PORT = 8080;
 const DB_URL = `mongodb+srv://vidhyadb:12345@cluster0.w1fpi.mongodb.net/vidhyabhim`
 const app = express();
 const cors = require("cors");
+const multer = require("multer");
 const bodyParser = require("body-parser");
-
+const { marksheet } = require("./Models/marksheet.model");
+const { course_model } = require("./Models/course.model");
+const Student = require("./Models/student.model");
+const student = require("./Models/student.model");
 app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json());
+
+// Setup Multer for file uploads
+
+const storage = multer.diskStorage({
+    destination: "./Documents/",
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+
+
 
 const connect = async () =>{
     try {
@@ -19,32 +35,53 @@ const connect = async () =>{
         console.error("Error connecting to MongoDB:", error);
     }
 }
-// student_data
-const StudentSchema = new mongoose.Schema({
-    name : String,
-    email : String,
-    fphone: { type: String, required: true, unique: true }
-})
 
-const student = mongoose.model("Student", StudentSchema);
 app.get("/students", async(req, res ) =>{
     try {
-        const students = await student.find();
+        const students = await Student.find();
         res.json(students);
     }
     catch (error){
    res.status(500).json({message : "Error Fetching student data"})
     }
 });
-// Marksheet_data
-const MarksheetSchema = new mongoose.Schema({
-    name : String,
-    phone: Number,
-    fname : Number,
+// Adding students 
+app.post("/addstudent",  async (req, res) => {
+// upload.fields([
+//     { name: "photo" }, { name: "sign" }, { name: "doc1" },
+//     { name: "doc2" }, { name: "doc3" }, { name: "doc4" }
+// ]),
+    try {
+        const { email, phone, ...studentData } = req.body;
+            // Check if student exists
+        const existingStudent = await Student.findOne({ email, phone });
+        if (existingStudent) {
+            return res.status(400).json({ message: "Student already exists." });
+        }
 
-    
-})
-const marksheet = mongoose.model("marksheet",MarksheetSchema)
+        // Check required fields
+        if (Object.values(studentData).some(val => val === "")) {
+            return res.status(400).json({ message: "Please enter all details." });
+        }
+
+        // Save file paths
+        const files = req.files;
+        studentData.photo = files["photo"] ? files["photo"][0].path : "";
+        studentData.sign = files["sign"] ? files["sign"][0].path : "";
+        studentData.doc1 = files["doc1"] ? files["doc1"][0].path : "";
+        studentData.doc2 = files["doc2"] ? files["doc2"][0].path : "";
+        studentData.doc3 = files["doc3"] ? files["doc3"][0].path : "";
+        studentData.doc4 = files["doc4"] ? files["doc4"][0].path : "";
+
+        const newStudent = new Student({ email, phone, ...studentData });
+        await newStudent.save();
+
+        res.status(201).json({ message: "Student added successfully!" });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+});
+
 app.get("/marksheet", async(req, res ) =>{
     try {
         const Marksheets = await marksheet.find();
@@ -64,12 +101,12 @@ app.get("/marksheet/:id", async(req,res) =>{
     catch (error) {
         res.status(500).json({ message: "Eroor fetching the data" });
         }
-})
+});
 app.get("/students/:id", async (req,res) =>{
      try{
        const  {id} = req.params;
         console.log(id);
-        const studentData = await student.findOne({id : Number(id) });
+        const studentData = await Student.findOne({id : Number(id) });
         console.log(studentData, "finding value");
         
         if (!studentData) {
@@ -83,51 +120,15 @@ app.get("/students/:id", async (req,res) =>{
     catch(error){
         res.status(500).json({message :  " Error Fetching Certificate data"})
     }
-})
-
-    
-    
-// app.get("/certificate:fphonelnumber", async (req,res) =>{
-//     // entities need : studentname, fname, semester, 
-//     // 
-//     try{
-//        const  {fphonelment_number} = req.params;
-//     const student = await student.findOne({enrollment_number});
-
-//     if(!student){
-//         return res.status(404).json({ success: false, message: "Student not found" });
-//     }
-//     res.json({ success: true, student });
-//         // const st_name = await student.find({}, {studentname : 1 , fname :1, semester : 1, _id:1 });
-//         // res.json(st_name);
-//     } 
-//     catch(error){
-//         res.status(500).json({message :  " Error Fetching Certificate data"})
-//     }
-// })
-// course_data
-const course_data = new mongoose.Schema({
-    id : Number,
-    coursename : String,
-    streamname : String,
-    semester : Number,
-    duration : String,
-    fees : Number,
-    status : String   
-})
-const course_model = mongoose.model("course", course_data);
+});
 app.get("/course", async (req,res) =>{
-    // entities need : studentname, fname, semester, 
     try{
        const data = await course_model.find();
        res.json(data);
    } catch (error){
     res.send(error)
    }
-})
-
-
-
+});
 
 app.get("/", async(req,res) => {
     res.send("API is running")

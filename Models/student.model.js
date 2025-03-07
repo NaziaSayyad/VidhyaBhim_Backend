@@ -1,0 +1,40 @@
+const mongoose = require("mongoose")
+
+const studentSchema = new mongoose.Schema({
+    coursename: String,
+    streamname: String,
+    semester: String,
+    enrol: String,
+    admissionnumber: String,
+    admissiondate: String,
+    session: String,
+    studentname: String,
+    gender: String,
+    nationality: String,
+    caste: String,
+    religion: String,
+    maritialstatus: String,
+    bloodgroup: String,
+    email: { type: String, unique: true },
+    dob: String,
+    address: String,
+    pincode: String,
+    phone: { type: String, unique: true },
+    aadhar: String,
+    fname: String,
+    fphone: String,
+    mname: String,
+    mphone: String,
+    photo: String,
+    sign: String,
+    doc1: String,
+    doc2: String,
+    doc3: String,
+    doc4: String,
+    other1: String,
+    other2: String,
+    batchname: String,
+    batchtime: String
+});
+const Student = mongoose.model("Student", studentSchema);
+module.exports = Student
