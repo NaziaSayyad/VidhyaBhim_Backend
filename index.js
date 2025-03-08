@@ -46,11 +46,11 @@ app.get("/students", async(req, res ) =>{
     }
 });
 // Adding students 
-app.post("/addstudent",  async (req, res) => {
-// upload.fields([
-//     { name: "photo" }, { name: "sign" }, { name: "doc1" },
-//     { name: "doc2" }, { name: "doc3" }, { name: "doc4" }
-// ]),
+app.post("/addstudent",  upload.fields([
+    { name: "photo" }, { name: "sign" }, { name: "doc1" },
+    { name: "doc2" }, { name: "doc3" }, { name: "doc4" }
+]), async (req, res) => {
+
     try {
         const { email, phone, ...studentData } = req.body;
             // Check if student exists
@@ -60,12 +60,12 @@ app.post("/addstudent",  async (req, res) => {
         }
 
         // Check required fields
-        if (Object.values(studentData).some(val => val === "")) {
-            return res.status(400).json({ message: "Please enter all details." });
-        }
+        // if (Object.values(studentData).some(val => val === "")) {
+        //     return res.status(400).json({ message: "Please enter all details." });
+        // }
 
         // Save file paths
-        const files = req.files;
+        const files = req.files || {}
         studentData.photo = files["photo"] ? files["photo"][0].path : "";
         studentData.sign = files["sign"] ? files["sign"][0].path : "";
         studentData.doc1 = files["doc1"] ? files["doc1"][0].path : "";
@@ -76,9 +76,9 @@ app.post("/addstudent",  async (req, res) => {
         const newStudent = new Student({ email, phone, ...studentData });
         await newStudent.save();
 
-        res.status(201).json({ message: "Student added successfully!" });
+        res.status(201).json({ data : newStudent, message: "Student added successfully!" });
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 });
 
