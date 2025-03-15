@@ -10,7 +10,7 @@ const bodyParser = require("body-parser");
 const { marksheet } = require("./Models/marksheet.model");
 const { course_model } = require("./Models/course.model");
 const Student = require("./Models/student.model");
-const student = require("./Models/student.model");
+const Subject_model = require("./Models/subjects.model");
 app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json());
@@ -129,7 +129,14 @@ app.get("/course", async (req,res) =>{
     res.send(error)
    }
 });
-
+app.get("/subject", async(req,res) =>{
+    try{
+        const subjectdata = await Subject_model.find();
+          res.json({subjects: subjectdata})
+    }catch(err){
+        res.send(err)
+    }
+})
 app.get("/", async(req,res) => {
     res.send("API is running")
 });
