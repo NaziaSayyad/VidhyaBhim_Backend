@@ -88,7 +88,7 @@ app.get("/marksheet", async(req, res ) =>{
         res.json(Marksheets);
     }
     catch (error){
-   res.status(500).json({message : "Error Fetching student data"})
+   res.status(500).json({message : "Error Fetching student data", err: error})
     }
 });
 app.get("/marksheet/:id", async(req,res) =>{
@@ -132,10 +132,19 @@ app.get("/course", async (req,res) =>{
 app.get("/subject", async(req,res) =>{
     try{
         const subjectdata = await Subject_model.find();
-          res.json({subjects: subjectdata})
+          res.json(subjectdata)
     }catch(err){
         res.send(err)
     }
+})
+app.post("/add-subject",async(req,res) => {
+   try{
+    const newStudent = new marksheet(req.body);
+        await newStudent.save();
+        res.status(201).json({ message: "Student data saved successfully!" });;
+   }catch(err){
+    res.status(500).json({ error: err.message });
+   }
 })
 app.get("/", async(req,res) => {
     res.send("API is running")
